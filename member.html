@@ -22,7 +22,7 @@
         width: 33.33%;
       }
       .responsive-chart {
-        width: 40%;
+        width: 40.0%;
       }
     }
 
@@ -32,7 +32,7 @@
         margin: auto;
       }
       .responsive-chart {
-        width: 80%;
+        width: 80.0%;
         margin: auto;
       }
     }
@@ -190,7 +190,12 @@
           r: {
             suggestedMin: 0,
             suggestedMax: 100,
-            ticks: { stepSize: 20 }
+            ticks: { stepSize: 20 },
+            pointLabels: {
+              font: {
+                size: 16
+              }
+            }
           }
         },
         plugins: {
