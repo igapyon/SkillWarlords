@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>要員スキル可視化（チャート拡大対応）</title>
+
+  <!-- Tailwind CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    @media (min-width: 768px) {
+      .responsive-image {
+        width: 33.33%;
+      }
+      .responsive-chart {
+        width: 40%;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .responsive-image {
+        width: 66.66%;
+        margin: auto;
+      }
+      .responsive-chart {
+        width: 80%;
+        margin: auto;
+      }
+    }
+
+    .profile-img {
+      border-radius: 50%;
+      object-fit: cover;
+      aspect-ratio: 1 / 1;
+      border: 1px solid #ccc;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <main class="max-w-6xl mx-auto p-6">
+    <!-- 顔写真＋チャート -->
+    <section class="flex flex-col md:flex-row items-center md:items-start justify-center gap-6 bg-white shadow rounded p-6">
+      <!-- 顔写真 -->
+      <div class="responsive-image">
+        <img src="https://raw.githubusercontent.com/igapyon/chatgpt-prompts/refs/heads/devel/character/newg-kaoba.png"
+             alt="顔写真"
+             class="profile-img">
+      </div>
+
+      <!-- レーダーチャート -->
+      <div class="responsive-chart">
+        <canvas id="radarChart" width="400" height="400"></canvas>
+      </div>
+    </section>
+
+    <!-- 名前・肩書き -->
+    <div class="mt-6 text-center">
+      <h1 class="text-2xl font-bold">山田 太郎</h1>
+      <p class="text-gray-600">GitHubを統べし者</p>
+    </div>
+
+    <!-- タグ -->
+    <div class="mt-4 flex flex-wrap justify-center gap-2" id="tag-container"></div>
+
+    <!-- スキル -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <h2 class="text-xl font-semibold mb-2">戦法（アクティブスキル）</h2>
+        <ul class="list-disc list-inside text-sm text-gray-700" id="active-skills"></ul>
+      </div>
+      <div>
+        <h2 class="text-xl font-semibold mb-2">技能（パッシブスキル）</h2>
+        <ul class="list-disc list-inside text-sm text-gray-700" id="passive-skills"></ul>
+      </div>
+    </div>
+
+    <!-- プロジェクト履歴 -->
+    <div class="mt-8">
+      <h2 class="text-xl font-semibold mb-2">プロジェクト履歴</h2>
+      <ul class="space-y-2 text-sm text-gray-700" id="project-history"></ul>
+    </div>
+
+    <!-- 名言 -->
+    <div class="mt-6 text-center italic text-gray-500" id="member-quote">"設計がない？ なら俺が書く。"</div>
+  </main>
+
+  <script>
+    const member = {
+      name: "山田 太郎",
+      title: "GitHubを統べし者",
+      parameters: {
+        "統率": 67,
+        "武力": 91,
+        "知力": 82,
+        "政治": 59,
+        "魅力": 76
+      },
+      skills: {
+        active: [
+          "爆速ホットフィックス",
+          "コードベース瞬間把握",
+          "カオス仕様整理爆撃"
+        ],
+        passive: [
+          "闇コード通訳者",
+          "トレース耐性",
+          "デグレ敏感体質"
+        ]
+      },
+      tags: [
+        "#Reactマスター",
+        "#ホットフィクサー",
+        "#メンター属性あり"
+      ],
+      projects: [
+        {
+          name: "某金融系管理システム",
+          year: "2022",
+          note: "レガシーな仕様を読み解きSPA化を推進"
+        }
+      ],
+      quote: "設計がない？ なら俺が書く。"
+    };
+
+    // タグ描画
+    const tagContainer = document.getElementById("tag-container");
+    member.tags.forEach(tag => {
+      const span = document.createElement("span");
+      span.textContent = tag;
+      span.className = "bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded";
+      tagContainer.appendChild(span);
+    });
+
+    // スキル描画
+    member.skills.active.forEach(skill => {
+      const li = document.createElement("li");
+      li.textContent = skill;
+      document.getElementById("active-skills").appendChild(li);
+    });
+
+    member.skills.passive.forEach(skill => {
+      const li = document.createElement("li");
+      li.textContent = skill;
+      document.getElementById("passive-skills").appendChild(li);
+    });
+
+    // プロジェクト履歴
+    member.projects.forEach(p => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>${p.year}:</strong> ${p.name} – ${p.note}`;
+      document.getElementById("project-history").appendChild(li);
+    });
+
+    // レーダーチャート描画
+    new Chart(document.getElementById("radarChart"), {
+      type: 'radar',
+      data: {
+        labels: ['統率', '武力', '知力', '政治', '魅力'],
+        datasets: [{
+          label: '能力値',
+          data: [
+            member.parameters["統率"],
+            member.parameters["武力"],
+            member.parameters["知力"],
+            member.parameters["政治"],
+            member.parameters["魅力"]
+          ],
+          fill: true,
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          pointBackgroundColor: 'rgba(59, 130, 246, 1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            suggestedMin: 0,
+            suggestedMax: 100,
+            ticks: { stepSize: 20 }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
